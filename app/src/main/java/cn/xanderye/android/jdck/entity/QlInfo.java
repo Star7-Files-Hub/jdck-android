@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author XanderYe
- * @description:
+ * @description: 青龙面板信息实体类
  * @date 2022/5/11 14:18
  */
 @Data
@@ -20,4 +20,4 @@ public class QlInfo {
     private String token;
     private String clientId;
     private String clientSecret;
-}
+}    
