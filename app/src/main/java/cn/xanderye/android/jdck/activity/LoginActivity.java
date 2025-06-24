@@ -12,32 +12,26 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import cn.xanderye.android.jdck.R;
 import cn.xanderye.android.jdck.config.Config;
-import cn.xanderye.android.jdck.entity.QlEnv;
 import cn.xanderye.android.jdck.entity.QlInfo;
 import cn.xanderye.android.jdck.util.QinglongUtil;
 import com.alibaba.fastjson.JSON;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
  * @author XanderYe
- * @description:
+ * @description: 登录活动处理类
  * @date 2022/5/11 13:39
  */
 public class LoginActivity extends AppCompatActivity {
 
     private Context context;
-
     private SharedPreferences config;
-
-    private EditText addressText, usernameText, passwordText, tokenText;
-
+    private EditText addressText, clientIdText, clientSecretText, tokenText;
     private Button loginBtn, cancelBtn;
-
     private CheckBox oldVersionCheckBox;
 
     @Override
@@ -49,7 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         // 配置存储
         config = getSharedPreferences("CONFIG", Context.MODE_PRIVATE);
         String qlJSON = config.getString("qlJSON", null);
-        QlInfo qlInfo = new QlInfo("", true, "", "", "");
+        QlInfo qlInfo = new QlInfo("", true, "", "", "", "", "");
         if (qlJSON != null) {
             qlInfo = JSON.parseObject(qlJSON, QlInfo.class);
             Config.getInstance().setQlInfo(qlInfo);
@@ -57,10 +51,10 @@ public class LoginActivity extends AppCompatActivity {
 
         addressText = findViewById(R.id.addressText);
         addressText.setText(qlInfo.getAddress());
-        usernameText = findViewById(R.id.usernameText);
-        usernameText.setText(qlInfo.getUsername());
-        passwordText = findViewById(R.id.passwordText);
-        passwordText.setText(qlInfo.getPassword());
+        clientIdText = findViewById(R.id.clientIdText);
+        clientIdText.setText(qlInfo.getClientId());
+        clientSecretText = findViewById(R.id.clientSecretText);
+        clientSecretText.setText(qlInfo.getClientSecret());
         tokenText = findViewById(R.id.tokenText);
         oldVersionCheckBox = findViewById(R.id.oldVersionCheckBox);
         oldVersionCheckBox.setChecked(qlInfo.getOldVersion());
@@ -68,21 +62,21 @@ public class LoginActivity extends AppCompatActivity {
         loginBtn = findViewById(R.id.loginBtn);
         loginBtn.setOnClickListener(v -> {
             String addr = addressText.getEditableText().toString();
-            String user = usernameText.getEditableText().toString();
-            String pwd = passwordText.getEditableText().toString();
+            String clientId = clientIdText.getEditableText().toString();
+            String clientSecret = clientSecretText.getEditableText().toString();
             String token = tokenText.getEditableText().toString();
             if (StringUtils.isBlank(addr)) {
                 Toast.makeText(this, "地址不能为空", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (StringUtils.isBlank(token) && StringUtils.isAnyBlank(user, pwd)) {
-                Toast.makeText(this, "账户密码或token必须有一个方式", Toast.LENGTH_SHORT).show();
+            if (StringUtils.isBlank(token) && (StringUtils.isBlank(clientId) || StringUtils.isBlank(clientSecret))) {
+                Toast.makeText(this, "Client ID和Client Secret或token必须有一个方式", Toast.LENGTH_SHORT).show();
                 return;
             }
             QlInfo qlInfo2 = new QlInfo();
             qlInfo2.setAddress(addr.trim());
-            qlInfo2.setUsername(user.trim());
-            qlInfo2.setPassword(pwd.trim());
+            qlInfo2.setClientId(clientId.trim());
+            qlInfo2.setClientSecret(clientSecret.trim());
             qlInfo2.setToken(token.trim());
             qlInfo2.setOldVersion(oldVersionCheckBox.isChecked());
             ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
@@ -91,12 +85,10 @@ public class LoginActivity extends AppCompatActivity {
                 try {
                     if (StringUtils.isNotBlank(token)) {
                         try {
-                            List<QlEnv> qlEnvList = QinglongUtil.getEnvList(qlInfo2);
-                            Config.getInstance().setQlEnvList(qlEnvList);
                             Config.getInstance().setQlInfo(qlInfo2);
                             loginSuccess(qlInfo2);
                         } catch (IOException e) {
-                            Toast.makeText(this, "青龙token已失效，请重新登录", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "token已失效，请重新登录", Toast.LENGTH_SHORT).show();
                         } finally {
                             Looper.loop();
                         }
@@ -133,9 +125,6 @@ public class LoginActivity extends AppCompatActivity {
         SharedPreferences.Editor edit = config.edit();
         edit.putString("qlJSON", JSON.toJSONString(qlInfo));
         edit.apply();
-        // 获取环境变量
-        List<QlEnv> qlEnvList = QinglongUtil.getEnvList(qlInfo);
-        Config.getInstance().setQlEnvList(qlEnvList);
         this.finish();
     }
-}
+}    
