@@ -14,12 +14,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class QlInfo {
     private String address;
-
     private Boolean oldVersion;
-
     private String username;
-
     private String password;
-
     private String token;
+    private String clientId;
+    private String clientSecret;
 }
